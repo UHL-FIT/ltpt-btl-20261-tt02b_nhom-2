@@ -11,7 +11,7 @@ import logging
 
 if getattr(sys, 'frozen', False):
     # Khi cài vào Program Files không có quyền ghi, dùng thư mục User
-    _BASE_DIR = os.path.join(os.path.expanduser("~"), "SmartAttend_Data")
+    _BASE_DIR = os.path.join(os.path.expanduser("~"), "ScholarScore_Data")
 else:
     _BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
