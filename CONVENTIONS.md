@@ -1,11 +1,11 @@
 # Mã nguồn chuẩn (Coding Conventions)
 
-Dự án `SmartAttend` hướng đến độ ổn định, khả năng bảo trì và có thể bàn giao thương mại (Client-ready). Mọi đoạn code được viết ra phải tuân thủ nghiêm ngặt các tiêu chuẩn sau:
+Dự án `ScholarScore` hướng đến độ ổn định, khả năng bảo trì và có thể bàn giao thương mại (Client-ready). Mọi đoạn code được viết ra phải tuân thủ nghiêm ngặt các tiêu chuẩn sau:
 
 ## 1. Naming Conventions (Quy chuẩn Đặt tên)
 Áp dụng tiêu chuẩn **PEP 8**:
 - **Biến và Hàm (Variables & Functions)**: Sử dụng `snake_case`. (Ví dụ: `lay_danh_sach()`, `tong_sv`).
-- **Hằng số (Constants)**: Sử dụng `UPPER_SNAKE_CASE`. (Ví dụ: `FILE_DIEMDANH`, `MAX_WEEKS`).
+- **Hằng số (Constants)**: Sử dụng `UPPER_SNAKE_CASE`. (Ví dụ: `FILE_HOCBONG`, `DIEM_TB_MIN_HB`).
 - **Lớp (Classes - Nếu có)**: Sử dụng `PascalCase`. (Ví dụ: `StudentManager`).
 
 ## 2. Quản lý Phiên bản (Versioning)
@@ -18,18 +18,18 @@ Sử dụng **Semantic Versioning (SemVer)** `v[MAJOR].[MINOR].[PATCH]` để đ
 ## 3. Khối Chú thích (Docstrings)
 Mọi hàm, module bắt buộc phải có Docstring mô tả theo cấu trúc **Google Python Style Guide**:
 ```python
-def cap_nhat_diem_danh(df, msv, tuan, trang_thai):
+def cap_nhat_diem(df, msv, ten_cot, gia_tri):
     """
-    Cập nhật trạng thái điểm danh của một sinh viên trong một tuần học cụ thể.
+    Cập nhật điểm số cho 1 sinh viên theo tên cột.
 
     Args:
-        df (pandas.DataFrame): Bảng dữ liệu điểm danh hiện tại.
-        msv (str): Mã sinh viên cần cập nhật.
-        tuan (str): Chuỗi định danh của tuần (Ví dụ: 't1', 't2').
-        trang_thai (str): Trạng thái điểm danh (M/P/K).
+        df (pandas.DataFrame): Bảng dữ liệu hiện tại.
+        msv (str): Mã sinh viên.
+        ten_cot (str): Tên cột điểm ('diem_cc', 'diem_gk', 'diem_ck', 'diem_rl').
+        gia_tri (float): Giá trị điểm mới.
 
     Returns:
-        tuple: (DataFrame mới, bool True nếu thành công / False nếu thất bại)
+        tuple: (DataFrame mới, bool Trạng thái)
     """
 ```
 

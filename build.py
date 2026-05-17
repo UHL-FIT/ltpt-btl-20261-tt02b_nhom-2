@@ -7,7 +7,7 @@ Cach dung:
     python build.py
 
 Ket qua:
-    dist/QuanLyDiem/QuanLyDiem.exe   (thu muc chua exe + data)
+    dist/ScholarScore/ScholarScore.exe   (thu muc chua exe + data)
 """
 
 import subprocess
@@ -16,7 +16,7 @@ import os
 import shutil
 
 # --- CAU HINH ---
-TEN_APP = "SmartAttend"
+TEN_APP = "ScholarScore"
 FILE_MAIN = "main.py"
 THU_MUC_DATA = "data"
 THU_MUC_ASSETS = "assets"
@@ -46,7 +46,7 @@ def xoa_build_cu():
 
 
 def tao_installer():
-    """Goi Inno Setup Compiler de tao file Setup_QuanLyDiem.exe"""
+    """Goi Inno Setup Compiler de tao file Setup_ScholarScore.exe"""
     print("\n  [4/4] Dang tao file cai dat (Installer)...")
     iscc_path = r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
     
@@ -77,7 +77,7 @@ def tao_installer():
 def build():
     """Chay PyInstaller de dong goi."""
     print("\n" + "=" * 50)
-    print("  DONG GOI UNG DUNG QUAN LY DIEM SINH VIEN")
+    print("  DONG GOI UNG DUNG XET HOC BONG")
     print("=" * 50)
 
     # 1. Kiem tra PyInstaller

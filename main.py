@@ -1,7 +1,7 @@
 """
 main.py
 =======
-Khởi chạy ứng dụng "SmartAttend".
+Khởi chạy ứng dụng "ScholarScore" - Hệ thống Xét Điểm Học Bổng.
 Thiết kế theo mô hình MVC sử dụng modules (không dùng class).
 
 Phase 1: Giao diện CLI (Command Line Interface)
@@ -24,7 +24,7 @@ from controllers import gui_controller
 from controllers import cli_controller
 
 if __name__ == "__main__":
-    logger.info(f"=== Khởi chạy SmartAttend v{__version__} (Chế độ mặc định) ===")
+    logger.info(f"=== Khởi chạy ScholarScore v{__version__} (Chế độ mặc định) ===")
     
     if len(sys.argv) > 1 and sys.argv[1] == '--cli':
         logger.info("Chuyển sang giao diện dòng lệnh (CLI) qua tham số.")

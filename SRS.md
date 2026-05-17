@@ -1,8 +1,8 @@
-# Software Requirements Specification (SRS) - SmartAttend
+# Software Requirements Specification (SRS) - ScholarScore
 
 ## 1. Giới thiệu
 ### 1.1 Mục đích
-Tài liệu này đặc tả các yêu cầu chức năng và phi chức năng cho hệ thống **SmartAttend** - phần mềm hỗ trợ giảng viên trong việc quản lý sinh viên và theo dõi điểm danh chuyên cần tự động.
+Tài liệu này đặc tả các yêu cầu chức năng và phi chức năng cho hệ thống **ScholarScore** - phần mềm hỗ trợ giảng viên trong việc quản lý sinh viên và theo dõi điểm danh chuyên cần tự động.
 
 ### 1.2 Phạm vi hệ thống
 Hệ thống nhắm tới việc thay thế sổ điểm danh giấy/Excel truyền thống, cung cấp giao diện trực quan và tính toán tự động các thông số như tổng vắng, điểm chuyên cần, cảnh báo cấm thi.

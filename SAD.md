@@ -1,12 +1,12 @@
-# Software Architecture Document (SAD) - SmartAttend
+# Software Architecture Document (SAD) - ScholarScore
 
 ## 1. Giới thiệu
-Tài liệu này cung cấp một cái nhìn tổng quan về kiến trúc phần mềm của ứng dụng SmartAttend. Nó phác thảo các quyết định kiến trúc, mô hình tổ chức source code và luồng dữ liệu của hệ thống.
+Tài liệu này cung cấp một cái nhìn tổng quan về kiến trúc phần mềm của ứng dụng ScholarScore. Nó phác thảo các quyết định kiến trúc, mô hình tổ chức source code và luồng dữ liệu của hệ thống.
 
 ---
 
 ## 2. Kiến trúc Tổng thể (Architectural Pattern)
-SmartAttend được xây dựng hoàn toàn dựa trên kiến trúc **MVC (Model - View - Controller)** kết hợp với mô hình ứng dụng phân lớp đơn giản dành cho Desktop.
+ScholarScore được xây dựng hoàn toàn dựa trên kiến trúc **MVC (Model - View - Controller)** kết hợp với mô hình ứng dụng phân lớp đơn giản dành cho Desktop.
 Điều này giúp tách biệt rõ ràng giữa logic dữ liệu, giao diện hiển thị và bộ điều phối:
 * **Model**: Chịu trách nhiệm trực tiếp giao tiếp với Data Source (lưu trữ dưới dạng file **CSV**) và bắt buộc sử dụng thư viện **Numpy/Pandas** để xử lý tính toán số liệu nặng.
 * **View**: Giao diện hiển thị với người dùng xây dựng bằng **Tkinter**. Ứng dụng bao gồm tối thiểu **03 windows** (01 Main window chứa bảng dữ liệu, tìm kiếm, các label thống kê, và 02 Sub windows dạng popup dùng để Thêm và Sửa thông tin). View hỗ trợ auto resize/align, tuỳ chỉnh màu sắc và icon.
