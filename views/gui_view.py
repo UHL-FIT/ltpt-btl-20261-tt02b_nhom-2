@@ -63,7 +63,7 @@ def sort_treeview(tree, col, reverse):
 def tao_giao_dien_chinh(root):
     import sys, os
     root.title("ScholarScore – Xét Điểm Học Bổng")
-    root.geometry("1300x650")
+    root.geometry("1360x650")
     root.configure(bg=C_BG)
 
     try:
@@ -145,8 +145,14 @@ def tao_giao_dien_chinh(root):
 
     ui["btn_search"]       = _styled_btn(fs, "🔍 Tìm", C_PRIMARY, pad=(8, 4))
     ui["btn_search"].pack(side=tk.LEFT, padx=3)
+    
     ui["btn_clear_search"] = _styled_btn(fs, "✖ Hủy", "#5f6368", pad=(8, 4))
     ui["btn_clear_search"].pack(side=tk.LEFT, padx=3)
+
+    # --- NÚT LỌC HỌC BỔNG THÊM MỚI ---
+    tk.Frame(fs, bg="#dadce0", width=1, height=28).pack(side=tk.LEFT, padx=8, pady=2)
+    ui["btn_loc_hb"] = _styled_btn(fs, "🎓 Học bổng", C_SUCCESS, pad=(8, 4))
+    ui["btn_loc_hb"].pack(side=tk.LEFT, padx=3)
 
     # ── TREEVIEW ─────────────────────────────────────────────────────────────
     frame_mid = tk.Frame(root, bg=C_BG, padx=10, pady=6)
