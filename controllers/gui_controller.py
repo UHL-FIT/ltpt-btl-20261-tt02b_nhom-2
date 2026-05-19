@@ -70,6 +70,15 @@ def on_clear_search():
     app_ui['cbo_search_by'].set("Tất cả")
     _tai_du_lieu()
 
+def on_loc_hoc_bong():
+    """Tự động điền điều kiện và lọc danh sách sinh viên đủ điều kiện học bổng."""
+    logger.info("Người dùng click Lọc nhanh sinh viên đạt học bổng.")
+    # Đặt tiêu chí tìm kiếm vào cột Học bổng và từ khóa là "Có" (tương ứng với "✅ Có")
+    app_ui['cbo_search_by'].set("Học bổng")
+    app_ui['ent_search'].delete(0, tk.END)
+    app_ui['ent_search'].insert(0, "Có")
+    _tai_du_lieu()
+
 
 def on_nhap_diem():
     """Mở popup nhập điểm (CC, GK, CK, RL) cho sinh viên được chọn."""
@@ -370,6 +379,13 @@ def on_double_click(event):
     ent.bind("<FocusOut>", lambda e: ent.destroy())
     app_edit_widget = ent
 
+def on_loc_hoc_bong():
+    """Tự động điền điều kiện và lọc danh sách sinh viên đủ điều kiện học bổng."""
+    logger.info("Người dùng click Lọc nhanh sinh viên đạt học bổng.")
+    app_ui['cbo_search_by'].set("Học bổng")
+    app_ui['ent_search'].delete(0, tk.END)
+    app_ui['ent_search'].insert(0, "Có")
+    _tai_du_lieu()
 
 def _bind_events():
     app_ui['btn_them'].config(command=on_them_sv)
@@ -382,11 +398,20 @@ def _bind_events():
 
     app_ui['btn_search'].config(command=on_search)
     app_ui['btn_clear_search'].config(command=on_clear_search)
+    
+    # --- KẾT NỐI NÚT LỌC HỌC BỔNG ---
+    app_ui['btn_loc_hb'].config(command=on_loc_hoc_bong)
+    
     app_ui['ent_search'].bind("<Return>", lambda e: on_search())
 
     tree = app_ui['tree']
     tree.bind("<Double-1>",      on_double_click)
     tree.bind("<ButtonRelease-1>", on_single_click)
+    
+    # THÊM DÒNG NÀY ĐỂ KẾT NỐI NÚT BẤM VỚI HÀM XỬ LÝ
+    app_ui['btn_loc_hb'].config(command=on_loc_hoc_bong)
+    
+    app_ui['ent_search'].bind("<Return>", lambda e: on_search())
 
 
 def chay_ung_dung():
