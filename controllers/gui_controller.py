@@ -243,25 +243,53 @@ def on_import():
 
 
 def on_export():
-    """Xuất danh sách sinh viên hiện tại ra một file CSV."""
+    """Xuất danh sách sinh viên hiện tại ra file CSV hoàn chỉnh."""
     logger.info("Người dùng click Export CSV.")
-    global app_df
+    if app_df.empty:
+        messagebox.showwarning("Cảnh báo", "Không có dữ liệu để xuất!")
+        return
+
     filepath = filedialog.asksaveasfilename(
-        title="Lưu báo cáo xét học bổng",
         defaultextension=".csv",
-        filetypes=[("CSV Files", "*.csv")],
-        initialfile="baocao_hocbong.csv"
+        filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")],
+        title="Chọn nơi lưu file CSV"
     )
     if not filepath:
         return
 
     try:
-        app_df.to_csv(filepath, index=False, encoding="utf-8-sig")
-        messagebox.showinfo("Thành công", f"Đã lưu báo cáo tại:\n{filepath}")
+        search_text = app_ui['ent_search'].get().strip().lower()
+        search_by   = app_ui['cbo_search_by'].get()
+        
+        display_df = app_df.copy()
+        if search_text and not display_df.empty:
+            if search_by == "MSV":
+                display_df = display_df[display_df['msv'].astype(str).str.lower().str.contains(search_text)]
+            elif search_by == "Họ Tên":
+                display_df = display_df[display_df['ho_ten'].astype(str).str.lower().str.contains(search_text)]
+            elif search_by == "Giới tính":
+                display_df = display_df[display_df['gioi_tinh'].astype(str).str.lower().str.contains(search_text)]
+            elif search_by == "SĐT":
+                display_df = display_df[display_df['sdt'].astype(str).str.lower().str.contains(search_text)]
+            elif search_by == "Xếp loại":
+                display_df = display_df[display_df['xep_loai'].astype(str).str.lower().str.contains(search_text)]
+            elif search_by == "Học bổng":
+                display_df = display_df[display_df['du_hb'].astype(str).str.lower().str.contains(search_text)]
+            elif search_by == "Tất cả":
+                mask = display_df.astype(str).apply(lambda x: x.str.lower().str.contains(search_text)).any(axis=1)
+                display_df = display_df[mask]
+
+        # ─── ĐOẠN QUAN TRỌNG ĐÃ SỬA LẠI ĐỂ CHIA CỘT HOÀN CHỈNH ───
+        # Sử dụng encoding='utf-8-sig' để Excel không lỗi font Tiếng Việt
+        # Sử dụng sep=';' (dấu chấm phẩy) để Excel/WPS tự động tách cột hoàn chỉnh ở máy Việt Nam
+        display_df.to_csv(filepath, index=False, sep=';', encoding='utf-8-sig')
+        
+        messagebox.showinfo("Thành công", f"Đã xuất dữ liệu ra file:\n{filepath}")
+        logger.info(f"Xuất file CSV thành công: {filepath}")
     except Exception as e:
-        messagebox.showerror("Lỗi", f"Không thể lưu file: {e}")
-
-
+        messagebox.showerror("Lỗi", f"Không thể xuất file: {e}")
+        logger.error(f"Lỗi khi xuất CSV: {e}", exc_info=True)
+        
 def on_about():
     """Hiển thị thông tin giới thiệu phần mềm."""
     logger.info("Người dùng click Giới thiệu.")
