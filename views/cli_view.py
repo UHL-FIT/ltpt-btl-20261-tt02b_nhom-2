@@ -39,6 +39,15 @@ def hien_bang_hocbong(df):
         print("\n  (Chưa có sinh viên nào)")
         return
 
+    # Sắp tên theo 'ho_ten' (A → Z) trước khi in ra CLI
+    try:
+        df = df.copy()
+        if 'ho_ten' in df.columns:
+            df['_sort_name'] = df['ho_ten'].fillna('').astype(str).str.lower()
+            df = df.sort_values(by='_sort_name').drop(columns=['_sort_name'])
+    except Exception:
+        pass
+
     print("\n  BẢNG XÉT HỌC BỔNG")
     header = (
         f"  {'STT':<4} {'MSV':<8} {'Họ tên':<20} {'GT':<4} {'Lớp':<10}"

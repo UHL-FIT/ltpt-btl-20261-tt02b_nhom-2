@@ -111,15 +111,21 @@ def lay_danh_sach():
         )
     )
 
-    # Đủ điều kiện học bổng: TB >= 8.0 VÀ RL >= 80
-    du_hb = np.where(
-        (diem_tb >= DIEM_TB_MIN_HB) & (rl_arr >= DIEM_RL_MIN_HB),
-        "✅ Có", "❌ Không"
-    )
+    # Trước hết xác định đủ điều kiện ban đầu: TB >= 8.0 và RL >= 80
+    eligible = (diem_tb >= DIEM_TB_MIN_HB) & (rl_arr >= DIEM_RL_MIN_HB)
 
     df["diem_tb"]  = diem_tb
     df["xep_loai"] = xep_loai
-    df["du_hb"]    = du_hb
+    df["du_hb"]    = "Không"
+
+    if np.any(eligible):
+        # Chọn tối đa 10 sinh viên đạt học bổng theo điểm TB giảm dần,
+        # ưu tiên điểm RL cao hơn khi bằng điểm TB.
+        eligible_df = df[eligible].copy()
+        eligible_df = eligible_df.sort_values(
+            by=["diem_tb", "diem_rl"], ascending=[False, False]
+        ).head(10)
+        df.loc[eligible_df.index, "du_hb"] = "Có"
 
     return df, True
 

@@ -51,6 +51,11 @@ def _tai_du_lieu():
             mask = display_df.apply(lambda row: row.astype(str).str.lower().str.contains(search_text).any(), axis=1)
             display_df = display_df[mask]
 
+    # Sắp tên theo 'ho_ten' (A → Z) trước khi hiển thị
+    if not display_df.empty and 'ho_ten' in display_df.columns:
+        display_df['_sort_name'] = display_df['ho_ten'].fillna('').astype(str).str.lower()
+        display_df = display_df.sort_values(by='_sort_name').drop(columns=['_sort_name'])
+
     gui_view.hien_thi_bang(app_ui, display_df)
 
     stats = diemdanh.thong_ke(display_df)
@@ -211,84 +216,342 @@ def on_xoa_sv():
 
 
 def on_import():
-    """Import danh sách sinh viên từ một file CSV bên ngoài."""
-    logger.info("Người dùng click Import CSV.")
+    """Import danh sách sinh viên từ một file Excel .xlsx."""
+    logger.info("Người dùng click Import Excel.")
     global app_df
     filepath = filedialog.askopenfilename(
-        title="Chọn file CSV danh sách sinh viên",
-        filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")]
+        title="Chọn file danh sách sinh viên (.xlsx)",
+        filetypes=[
+            ("Excel Files", "*.xlsx"),
+            ("All Files", "*.*")
+        ]
     )
     if not filepath:
         return
 
     try:
-        df_import = pd.read_csv(filepath, dtype=str)
-        if "ho_ten" not in df_import.columns:
-            messagebox.showerror("Lỗi", "File CSV phải có cột 'ho_ten'.")
+        if not filepath.lower().endswith('.xlsx'):
+            raise ValueError("Chỉ hỗ trợ file Excel .xlsx")
+
+        # Đọc file Excel (mặc định từ sheet đầu tiên)
+        df_import = pd.read_excel(filepath, dtype=str)
+        logger.info(f"Đọc file Excel: {filepath}")
+
+        # Chuẩn hóa tên cột nhập từ Excel sang tên cột nội bộ
+        col_map = {
+            "msv": "msv",
+            "mã sv": "msv",
+            "mã sinh viên": "msv",
+            "họ tên": "ho_ten",
+            "ho_ten": "ho_ten",
+            "tên": "ho_ten",
+            "giới tính": "gioi_tinh",
+            "gioi_tinh": "gioi_tinh",
+            "lớp": "lop",
+            "lop": "lop",
+            "sđt": "sdt",
+            "sdt": "sdt",
+            "điểm cc": "diem_cc",
+            "diem cc": "diem_cc",
+            "cc": "diem_cc",
+            "điểm gk": "diem_gk",
+            "diem gk": "diem_gk",
+            "gk": "diem_gk",
+            "điểm ck": "diem_ck",
+            "diem ck": "diem_ck",
+            "ck": "diem_ck",
+            "điểm rl": "diem_rl",
+            "diem rl": "diem_rl",
+            "rl": "diem_rl",
+            "điểm tb": "diem_tb",
+            "diem tb": "diem_tb",
+            "xếp loại": "xep_loai",
+            "xep loai": "xep_loai",
+            "du_hb": "du_hb",
+            "học bổng": "du_hb",
+            "hoc bong": "du_hb",
+        }
+
+        df_import.columns = [
+            col_map.get(str(col).strip().lower(), str(col).strip().lower())
+            for col in df_import.columns
+        ]
+
+        if "ho_ten" not in df_import.columns or "msv" not in df_import.columns:
+            messagebox.showerror(
+                "Lỗi",
+                "File phải có ít nhất hai cột: 'msv' và 'ho_ten'.\n\n"
+                "Các cột cơ bản cần có:\n"
+                "- msv, ho_ten\n"
+                "- gioi_tinh, lop, sdt, diem_cc, diem_gk, diem_ck, diem_rl (tùy chọn)"
+            )
             return
 
-        for _, row in df_import.iterrows():
-            data = {
-                "msv":    row.get("msv", ""),
-                "ho_ten": row.get("ho_ten", ""),
-                "lop":    row.get("lop", ""),
-                "sdt":    row.get("sdt", ""),
-            }
-            app_df, _, _ = diemdanh.them_sinh_vien(app_df, data)
+        def _safe_float(value):
+            try:
+                return float(value)
+            except Exception:
+                return 0.0
 
-        _tai_du_lieu()
-        messagebox.showinfo("Thành công", f"Đã import thành công từ:\n{filepath}")
+        existing_msv = set(app_df["msv"].astype(str).str.strip().str.upper())
+        import_count = 0
+
+        for _, row in df_import.iterrows():
+            msv = str(row.get("msv", "")).strip().upper()
+            ho_ten = str(row.get("ho_ten", "")).strip()
+            if not msv or not ho_ten:
+                continue
+
+            if msv in existing_msv:
+                continue
+
+            new_row = {
+                "msv": msv,
+                "ho_ten": ho_ten,
+                "gioi_tinh": str(row.get("gioi_tinh", "")).strip() or "Nam",
+                "lop": str(row.get("lop", "")).strip(),
+                "sdt": str(row.get("sdt", "")).strip(),
+                "diem_cc": _safe_float(row.get("diem_cc", 0)),
+                "diem_gk": _safe_float(row.get("diem_gk", 0)),
+                "diem_ck": _safe_float(row.get("diem_ck", 0)),
+                "diem_rl": _safe_float(row.get("diem_rl", 0)),
+            }
+
+            app_df = pd.concat([app_df, pd.DataFrame([new_row])], ignore_index=True)
+            existing_msv.add(msv)
+            import_count += 1
+
+        if import_count:
+            diemdanh.luu_danh_sach(app_df)
+            _tai_du_lieu()
+
+        messagebox.showinfo(
+            "Thành công",
+            f"Đã import thành công {import_count} sinh viên từ:\n{filepath}"
+        )
+        logger.info(f"Import thành công {import_count} sinh viên từ: {filepath}")
     except Exception as e:
         messagebox.showerror("Lỗi", f"Không thể import file: {e}")
+        logger.error(f"Lỗi khi import: {e}", exc_info=True)
 
 
 def on_export():
-    """Xuất danh sách sinh viên hiện tại ra file CSV hoàn chỉnh."""
-    logger.info("Người dùng click Export CSV.")
+    """Xuất danh sách sinh viên hiện tại ra file Excel."""
+    
+    logger.info("Người dùng click Export Excel.")
+
     if app_df.empty:
-        messagebox.showwarning("Cảnh báo", "Không có dữ liệu để xuất!")
+        messagebox.showwarning(
+            "Cảnh báo",
+            "Không có dữ liệu để xuất!"
+        )
         return
 
     filepath = filedialog.asksaveasfilename(
-        defaultextension=".csv",
-        filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")],
-        title="Chọn nơi lưu file CSV"
+        defaultextension=".xlsx",
+        filetypes=[("Excel Files", "*.xlsx")],
+        title="Chọn nơi lưu file Excel"
     )
+
     if not filepath:
         return
 
     try:
+
         search_text = app_ui['ent_search'].get().strip().lower()
         search_by   = app_ui['cbo_search_by'].get()
-        
+
         display_df = app_df.copy()
+
         if search_text and not display_df.empty:
+
             if search_by == "MSV":
-                display_df = display_df[display_df['msv'].astype(str).str.lower().str.contains(search_text)]
+                display_df = display_df[
+                    display_df['msv'].astype(str)
+                    .str.lower()
+                    .str.contains(search_text)
+                ]
+
             elif search_by == "Họ Tên":
-                display_df = display_df[display_df['ho_ten'].astype(str).str.lower().str.contains(search_text)]
+                display_df = display_df[
+                    display_df['ho_ten'].astype(str)
+                    .str.lower()
+                    .str.contains(search_text)
+                ]
+
             elif search_by == "Giới tính":
-                display_df = display_df[display_df['gioi_tinh'].astype(str).str.lower().str.contains(search_text)]
+                display_df = display_df[
+                    display_df['gioi_tinh'].astype(str)
+                    .str.lower()
+                    .str.contains(search_text)
+                ]
+
             elif search_by == "SĐT":
-                display_df = display_df[display_df['sdt'].astype(str).str.lower().str.contains(search_text)]
+                display_df = display_df[
+                    display_df['sdt'].astype(str)
+                    .str.lower()
+                    .str.contains(search_text)
+                ]
+
             elif search_by == "Xếp loại":
-                display_df = display_df[display_df['xep_loai'].astype(str).str.lower().str.contains(search_text)]
+                display_df = display_df[
+                    display_df['xep_loai'].astype(str)
+                    .str.lower()
+                    .str.contains(search_text)
+                ]
+
             elif search_by == "Học bổng":
-                display_df = display_df[display_df['du_hb'].astype(str).str.lower().str.contains(search_text)]
+                display_df = display_df[
+                    display_df['du_hb'].astype(str)
+                    .str.lower()
+                    .str.contains(search_text)
+                ]
+
             elif search_by == "Tất cả":
-                mask = display_df.astype(str).apply(lambda x: x.str.lower().str.contains(search_text)).any(axis=1)
+
+                mask = display_df.astype(str).apply(
+                    lambda x: x.str.lower().str.contains(search_text)
+                ).any(axis=1)
+
                 display_df = display_df[mask]
 
-        # ─── ĐOẠN QUAN TRỌNG ĐÃ SỬA LẠI ĐỂ CHIA CỘT HOÀN CHỈNH ───
-        # Sử dụng encoding='utf-8-sig' để Excel không lỗi font Tiếng Việt
-        # Sử dụng sep=';' (dấu chấm phẩy) để Excel/WPS tự động tách cột hoàn chỉnh ở máy Việt Nam
-        display_df.to_csv(filepath, index=False, sep=';', encoding='utf-8-sig')
-        
-        messagebox.showinfo("Thành công", f"Đã xuất dữ liệu ra file:\n{filepath}")
-        logger.info(f"Xuất file CSV thành công: {filepath}")
+        # ===== IMPORT OPENPYXL =====
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+
+        # ===== Đổi tên cột =====
+        export_df = display_df.rename(columns={
+            "msv": "Mã SV",
+            "ho_ten": "Họ tên",
+            "lop": "Lớp",
+            "sdt": "SĐT",
+            "gioi_tinh": "Giới tính",
+            "diem_cc": "Điểm CC",
+            "diem_gk": "Điểm GK",
+            "diem_ck": "Điểm CK",
+            "diem_rl": "Điểm RL",
+            "diem_tb": "Điểm TB",
+            "xep_loai": "Xếp loại",
+            "du_hb": "Học bổng",
+        })
+
+        # ===== Tạo workbook =====
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Danh sách sinh viên"
+
+        # ===== Tiêu đề =====
+        ws.merge_cells("A1:M1")
+
+        ws["A1"] = "DANH SÁCH SINH VIÊN"
+
+        ws["A1"].font = Font(
+            bold=True,
+            size=14
+        )
+
+        ws["A1"].alignment = Alignment(
+            horizontal="center"
+        )
+
+
+        headers = [
+            "STT",
+            "MSV",
+            "Họ tên",
+            "Giới tính",
+            "Lớp",
+            "SĐT",
+            "Điểm CC",
+            "Điểm GK",
+            "Điểm CK",
+            "Điểm RL",
+            "Điểm TB",
+            "Xếp loại",
+            "Học bổng"
+        ]
+
+        for col, header in enumerate(headers, start=1):
+
+            cell = ws.cell(row=2, column=col)
+
+            cell.value = header
+
+            cell.font = Font(bold=True)
+
+            cell.fill = PatternFill(
+                start_color="FFF2CC",
+                end_color="FFF2CC",
+                fill_type="solid"
+            )
+
+            cell.alignment = Alignment(
+                horizontal="center"
+            )
+
+        # ===== Dữ liệu =====
+        for i, row in enumerate(export_df.values, start=3):
+
+            ws.cell(i, 1, i - 2)
+
+            for j, value in enumerate(row, start=2):
+
+                ws.cell(i, j, value)
+
+        # ===== Border =====
+        thin = Side(style="thin")
+
+        for row in ws.iter_rows(
+            min_row=2,
+            max_row=ws.max_row,
+            min_col=1,
+            max_col=13
+        ):
+
+            for cell in row:
+
+                cell.border = Border(
+                    left=thin,
+                    right=thin,
+                    top=thin,
+                    bottom=thin
+                )
+
+        # ===== Độ rộng cột =====
+        ws.column_dimensions["A"].width = 8
+        ws.column_dimensions["B"].width = 25
+        ws.column_dimensions["C"].width = 25
+        ws.column_dimensions["D"].width = 15
+        ws.column_dimensions["E"].width = 15
+        ws.column_dimensions["F"].width = 17
+        ws.column_dimensions["G"].width = 12
+        ws.column_dimensions["H"].width = 12
+        ws.column_dimensions["I"].width = 12
+        ws.column_dimensions["J"].width = 12
+        ws.column_dimensions["K"].width = 15
+        ws.column_dimensions["L"].width = 15
+
+        # ===== Lưu file =====
+        wb.save(filepath)
+
+        messagebox.showinfo(
+            "Thành công",
+            f"Đã xuất file Excel:\n{filepath}"
+        )
+
+        logger.info(f"Xuất file Excel thành công: {filepath}")
+
     except Exception as e:
-        messagebox.showerror("Lỗi", f"Không thể xuất file: {e}")
-        logger.error(f"Lỗi khi xuất CSV: {e}", exc_info=True)
+
+        messagebox.showerror(
+            "Lỗi",
+            f"Không thể xuất file:\n{e}"
+        )
+
+        logger.error(
+            f"Lỗi khi export Excel: {e}",
+            exc_info=True
+        )
         
 def on_about():
     """Hiển thị thông tin giới thiệu phần mềm."""

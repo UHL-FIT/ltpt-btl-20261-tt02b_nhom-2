@@ -121,8 +121,8 @@ def tao_giao_dien_chinh(root):
     tk.Frame(fa, bg="#dadce0", width=1, height=28).pack(side=tk.LEFT, padx=8, pady=2)
 
     ui["btn_nhap_diem"] = _tb_btn("📝 Nhập Điểm", bg="#0b8043")
-    ui["btn_import"]    = _tb_btn("📂 Import CSV", bg="#5f6368")
-    ui["btn_export"]    = _tb_btn("💾 Export CSV", bg="#5f6368")
+    ui["btn_import"]    = _tb_btn("📂 Import Excel", bg="#5f6368")
+    ui["btn_export"]    = _tb_btn("💾 Export Excel", bg="#5f6368")
 
     tk.Frame(fa, bg="#dadce0", width=1, height=28).pack(side=tk.LEFT, padx=8, pady=2)
     ui["btn_about"]     = _tb_btn("ℹ️ Giới thiệu", bg="#5f6368")
@@ -235,6 +235,15 @@ def hien_thi_bang(ui, df):
         tree.delete(row)
     if df.empty:
         return
+
+    # Sắp tên theo 'ho_ten' (A → Z) trước khi hiển thị
+    try:
+        df = df.copy()
+        if 'ho_ten' in df.columns:
+            df['_sort_name'] = df['ho_ten'].fillna('').astype(str).str.lower()
+            df = df.sort_values(by='_sort_name').drop(columns=['_sort_name'])
+    except Exception:
+        pass
 
     for idx, (_, row) in enumerate(df.iterrows(), start=1):
         values = [
