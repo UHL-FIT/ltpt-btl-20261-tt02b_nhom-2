@@ -517,6 +517,8 @@ def on_export():
                     bottom=thin
                 )
 
+        # ===== Độ 
+       # Tìm đoạn cấu hình độ rộng cột này ở cuối hàm on_export trong file gui_controller.py
         # ===== Độ rộng cột =====
         ws.column_dimensions["A"].width = 8
         ws.column_dimensions["B"].width = 25
@@ -530,7 +532,7 @@ def on_export():
         ws.column_dimensions["J"].width = 12
         ws.column_dimensions["K"].width = 15
         ws.column_dimensions["L"].width = 15
-
+        ws.column_dimensions["M"].width = 18 # THÊM DÒNG NÀY: Để đặt độ rộng cho cột M (Học bổng) trong Excel
         # ===== Lưu file =====
         wb.save(filepath)
 
@@ -675,7 +677,7 @@ def on_loc_hoc_bong():
     logger.info("Người dùng click Lọc nhanh sinh viên đạt học bổng.")
     app_ui['cbo_search_by'].set("Học bổng")
     app_ui['ent_search'].delete(0, tk.END)
-    app_ui['ent_search'].insert(0, "Có")
+    app_ui['ent_search'].insert(0, "Có") # Đảm bảo giữ nguyên là "Có" để khớp với bảng của bạn
     _tai_du_lieu()
 
 def _bind_events():

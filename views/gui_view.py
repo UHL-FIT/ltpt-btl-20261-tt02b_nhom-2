@@ -151,7 +151,8 @@ def tao_giao_dien_chinh(root):
 
     # --- NÚT LỌC HỌC BỔNG THÊM MỚI ---
     tk.Frame(fs, bg="#dadce0", width=1, height=28).pack(side=tk.LEFT, padx=8, pady=2)
-    ui["btn_loc_hb"] = _styled_btn(fs, "🎓 Học bổng", C_SUCCESS, pad=(8, 4))
+    ui["btn_loc_hb"] = _styled_btn(fs, "🎓 Học bổng", C_SUCCESS, pad=(4, 4))
+    ui["btn_loc_hb"].config(width=10) # Thêm dòng này để ép nút hiển thị rộng ra
     ui["btn_loc_hb"].pack(side=tk.LEFT, padx=3)
 
     # ── TREEVIEW ─────────────────────────────────────────────────────────────
@@ -176,11 +177,13 @@ def tao_giao_dien_chinh(root):
     scroll_y.config(command=tree.yview)
     scroll_x.config(command=tree.xview)
 
+   # Tìm đoạn này trong hàm tao_giao_dien_chinh (Dòng ~110 trong gui_view.py)
     col_widths = {
         "Chọn": 45, "STT": 40, "MSV": 90, "Họ Tên": 185,
         "Giới tính": 72, "Lớp": 82, "SĐT": 100,
         "CC (0-10)": 78, "GK (0-10)": 78, "CK (0-10)": 78,
-        "RL (0-100)": 85, "Điểm TB": 78, "Xếp Loại": 92, "Học Bổng": 90,
+        "RL (0-100)": 85, "Điểm TB": 78, "Xếp Loại": 92, 
+        "Học Bổng": 140, # Đặt hẳn 140 để tiêu đề bảng rộng rãi, hiển thị siêu đẹp
     }
     for col in cols:
         htxt = "☐" if col == "Chọn" else col
@@ -228,6 +231,7 @@ def tao_giao_dien_chinh(root):
     return ui
 
 
+# Tìm hàm hien_thi_bang(ui, df) ở phía dưới file gui_view.py
 def hien_thi_bang(ui, df):
     tree = ui["tree"]
     tree.heading("Chọn", text="☐")
@@ -236,7 +240,7 @@ def hien_thi_bang(ui, df):
     if df.empty:
         return
 
-    # Sắp tên theo 'ho_ten' (A → Z) trước khi hiển thị
+    # Sắp xếp tên... (giữ nguyên đoạn code cũ)
     try:
         df = df.copy()
         if 'ho_ten' in df.columns:
@@ -258,11 +262,12 @@ def hien_thi_bang(ui, df):
             row.get("xep_loai", ""),
             row.get("du_hb", ""),
         ]
-        du_hb    = row.get("du_hb", "")
+        du_hb    = str(row.get("du_hb", "")).strip() # Đồng bộ ép kiểu chuỗi
         xep_loai = row.get("xep_loai", "")
         base_tag = "even" if idx % 2 == 0 else "odd"
 
-        if du_hb == "✅ Có":
+        # SỬA TẠI ĐÂY: Hỗ trợ kiểm tra cả trường hợp chữ "Có" lẫn "✅ Có"
+        if "Có" in du_hb:
             tag = "hb"
         elif xep_loai == "Yếu":
             tag = "yeu"
@@ -275,7 +280,6 @@ def hien_thi_bang(ui, df):
     tree.tag_configure("odd",  background=C_ROW_ODD)
     tree.tag_configure("hb",   foreground=C_SUCCESS, font=FONT_BOLD)
     tree.tag_configure("yeu",  foreground=C_DANGER)
-
 
 def cap_nhat_thong_ke(ui, stats):
     tong = stats.get("tong_sv", 0)
