@@ -114,11 +114,11 @@ def on_nhap_diem():
         return
 
     item = tree.item(selected[0])
-    msv    = item['values'][2]
+    msv    = str(item['values'][2]).strip().upper()
     ho_ten = item['values'][3]
 
     # Lấy điểm hiện tại từ DataFrame
-    row_df = app_df[app_df['msv'] == msv]
+    row_df = app_df[app_df['msv'].fillna('').astype(str).str.strip().str.upper() == msv]
     current_scores = {}
     if not row_df.empty:
         current_scores = {
@@ -137,6 +137,19 @@ def on_nhap_diem():
         _tai_du_lieu()
 
 
+def _select_student_by_msv(msv):
+    tree = app_ui.get("tree")
+    if not tree:
+        return
+    target_msv = str(msv).strip().upper()
+    for item_id in tree.get_children():
+        values = tree.item(item_id, "values")
+        if str(values[2]).strip().upper() == target_msv:
+            tree.selection_set(item_id)
+            tree.see(item_id)
+            break
+
+
 def on_them_sv():
     """Bật cửa sổ Pop-up để thêm mới 1 sinh viên."""
     logger.info("Người dùng click Thêm Sinh viên.")
@@ -146,6 +159,7 @@ def on_them_sv():
         app_df, ok, msg = diemdanh.them_sinh_vien(app_df, data)
         if ok:
             _tai_du_lieu()
+            _select_student_by_msv(data.get("msv", ""))
         else:
             messagebox.showerror("Lỗi", msg)
 
@@ -175,7 +189,7 @@ def on_sua_sv():
 
     item = tree.item(selected[0])
     # cols: Chọn(0) STT(1) MSV(2) Họ Tên(3) Giới tính(4) Lớp(5) SĐT(6)
-    msv       = item['values'][2]
+    msv       = str(item['values'][2]).strip().upper()
     hoten     = item['values'][3]
     gioi_tinh = item['values'][4]
     lop       = item['values'][5]

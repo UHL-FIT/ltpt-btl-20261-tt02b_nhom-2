@@ -36,6 +36,25 @@ HE_SO_CC = 0.1
 HE_SO_GK = 0.3
 HE_SO_CK = 0.6
 
+BASE_COLS = ["msv", "ho_ten", "gioi_tinh", "lop", "sdt",
+             "diem_cc", "diem_gk", "diem_ck", "diem_rl"]
+TEXT_COLS = ["msv", "ho_ten", "gioi_tinh", "lop", "sdt"]
+
+
+def _normalize_msv(value):
+    if value is None or (isinstance(value, float) and np.isnan(value)):
+        return ""
+    return str(value).strip().upper()
+
+
+def _ensure_base_columns(df):
+    df = df.copy()
+    for col in BASE_COLS:
+        if col not in df.columns:
+            default_value = "" if col in TEXT_COLS else 0.0
+            df[col] = default_value
+    return df
+
 
 def khoi_tao_csv():
     """
@@ -165,19 +184,21 @@ def them_sinh_vien(df, data):
     Returns:
         tuple: (DataFrame mới, bool Trạng thái, str Thông báo)
     """
-    msv_moi = str(data.get("msv", "")).strip().upper()
+    df = _ensure_base_columns(df)
+    msv_moi = _normalize_msv(data.get("msv", ""))
     if not msv_moi:
         return df, False, "Mã sinh viên không được để trống!"
 
-    if msv_moi in df["msv"].values:
+    existing_msvs = df["msv"].fillna("").astype(str).str.strip().str.upper()
+    if msv_moi in existing_msvs.values:
         return df, False, "Mã sinh viên đã tồn tại!"
 
     row = {
         "msv":      msv_moi,
-        "ho_ten":   data.get("ho_ten", ""),
-        "gioi_tinh":data.get("gioi_tinh", "Nam"),
-        "lop":      data.get("lop", ""),
-        "sdt":      data.get("sdt", ""),
+        "ho_ten":   str(data.get("ho_ten", "")).strip(),
+        "gioi_tinh":str(data.get("gioi_tinh", "Nam")).strip() or "Nam",
+        "lop":      str(data.get("lop", "")).strip(),
+        "sdt":      str(data.get("sdt", "")).strip(),
         "diem_cc":  0.0,
         "diem_gk":  0.0,
         "diem_ck":  0.0,
@@ -203,22 +224,25 @@ def sua_sinh_vien(df, old_msv, data):
     Returns:
         tuple: (DataFrame mới, bool Trạng thái, str Thông báo)
     """
-    idx = df.index[df["msv"] == old_msv]
+    df = _ensure_base_columns(df)
+    old_msv_norm = _normalize_msv(old_msv)
+    idx = df.index[df["msv"].fillna("").astype(str).str.strip().str.upper() == old_msv_norm]
     if len(idx) == 0:
         return df, False, "Không tìm thấy mã sinh viên!"
 
-    new_msv = str(data.get("msv", "")).strip().upper()
+    new_msv = _normalize_msv(data.get("msv", ""))
     if not new_msv:
         return df, False, "Mã sinh viên không được để trống!"
 
-    if new_msv != old_msv and new_msv in df["msv"].values:
+    other_msvs = df["msv"].fillna("").astype(str).str.strip().str.upper()
+    if new_msv != old_msv_norm and new_msv in other_msvs.drop(index=idx).values:
         return df, False, "Mã sinh viên mới đã tồn tại!"
 
     df.loc[idx, "msv"]       = new_msv
-    df.loc[idx, "ho_ten"]    = data.get("ho_ten", "")
-    df.loc[idx, "gioi_tinh"] = data.get("gioi_tinh", "Nam")
-    df.loc[idx, "lop"]       = data.get("lop", "")
-    df.loc[idx, "sdt"]       = data.get("sdt", "")
+    df.loc[idx, "ho_ten"]    = str(data.get("ho_ten", "")).strip()
+    df.loc[idx, "gioi_tinh"] = str(data.get("gioi_tinh", "Nam")).strip() or "Nam"
+    df.loc[idx, "lop"]       = str(data.get("lop", "")).strip()
+    df.loc[idx, "sdt"]       = str(data.get("sdt", "")).strip()
     luu_danh_sach(df)
     logger.info(f"Đã sửa SV: {old_msv} -> {new_msv}")
     return df, True, f"Sửa SV thành công: {new_msv}"
@@ -235,7 +259,9 @@ def xoa_sinh_vien(df, msv):
     Returns:
         tuple: (DataFrame mới, bool Trạng thái, str Thông báo)
     """
-    idx = df.index[df["msv"] == msv]
+    df = _ensure_base_columns(df)
+    msv_norm = _normalize_msv(msv)
+    idx = df.index[df["msv"].fillna("").astype(str).str.strip().str.upper() == msv_norm]
     if len(idx) == 0:
         return df, False, "Không tìm thấy mã sinh viên!"
 
@@ -255,10 +281,13 @@ def xoa_nhieu_sinh_vien(df, msv_list):
     Returns:
         tuple: (DataFrame mới, bool Trạng thái, str Thông báo)
     """
+    df = _ensure_base_columns(df)
     if not msv_list:
         return df, False, "Danh sách trống!"
 
-    df = df[~df["msv"].isin(msv_list)]
+    normalized_to_delete = {_normalize_msv(item) for item in msv_list}
+    normalized_msvs = df["msv"].fillna("").astype(str).str.strip().str.upper()
+    df = df[~normalized_msvs.isin(normalized_to_delete)]
     luu_danh_sach(df)
     return df, True, f"Đã xóa {len(msv_list)} sinh viên!"
 
@@ -276,7 +305,12 @@ def cap_nhat_diem(df, msv, ten_cot, gia_tri):
     Returns:
         tuple: (DataFrame mới, bool Trạng thái)
     """
-    idx = df.index[df["msv"] == msv]
+    df = _ensure_base_columns(df)
+    if ten_cot not in df.columns:
+        df[ten_cot] = 0.0
+
+    msv_norm = _normalize_msv(msv)
+    idx = df.index[df["msv"].fillna("").astype(str).str.strip().str.upper() == msv_norm]
     if len(idx) == 0:
         return df, False
 
